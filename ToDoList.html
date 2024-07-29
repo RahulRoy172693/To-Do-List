@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO List</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>TODO List</h1>
+            <div class="menu">
+                <div class="menu-item">Today tasks</div>
+                <div id="sidebar-todo-list" class="sub-menu"></div>
+                <div class="menu-item">Restored Tasks</div>
+                <div id="deleted-sidebar-list" class="sub-menu"></div>
+            </div>
+        </div>
+        <div class="main-content">
+            <h1>Today Main Focus</h1>
+            <form id="todo-form">
+                <input type="text" id="todo-input" placeholder="What is your next task?" required>
+                <input type="time" id="todo-time" required>
+                <select id="todo-ampm" required>
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                </select>
+                <button type="submit">Add</button>
+            </form>
+            <ul id="todo-list"></ul>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
+<style>
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #eceff1;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 1000px;
+    overflow: hidden;
+}
+
+.sidebar {
+    background-color: #9e8ce3;
+    padding: 20px;
+    width: 250px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.profile {
+    text-align: center;
+}
+
+.profile-pic {
+    background-color: #fff;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 0 auto;
+}
+
+.profile-name {
+    margin-top: 10px;
+    font-weight: 700;
+}
+
+.menu {
+    margin-top: 30px;
+}
+
+.menu-item {
+    margin: 20px 0;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.sub-menu {
+    margin-left: 20px;
+    margin-top: 10px;
+}
+
+.sub-menu-item {
+    margin: 10px 0;
+    cursor: pointer;
+}
+
+.main-content {
+    padding: 30px;
+    flex: 1;
+}
+
+h1 {
+    font-size: 1.5em;
+    color: #333;
+}
+
+h2 {
+    font-size: 1.2em;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+form {
+    display: flex;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+input[type="text"] {
+    flex: 2;
+    padding: 12px;
+    border: none;
+    font-size: 1em;
+    outline: none;
+}
+
+input[type="time"] {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    font-size: 1em;
+    outline: none;
+}
+
+select {
+    flex: 0.5;
+    padding: 12px;
+    border: none;
+    font-size: 1em;
+    outline: none;
+}
+
+button {
+    padding: 12px 20px;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease-in-out;
+}
+
+li:hover {
+    background-color: #f1f1f1;
+}
+
+li.completed {
+    text-decoration: line-through;
+    color: #999;
+}
+
+li button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #007bff;
+    margin-left: 10px;
+    transition: color 0.3s ease-in-out;
+}
+
+li button:hover {
+    color: #0056b3;
+}
+
+li button.delete {
+    color: #dc3545;
+}
+
+li button.delete:hover {
+    color: #c82333;
+}
+
+li button.permanently-delete {
+    color: #d9534f;
+}
+
+li button.permanently-delete:hover {
+    color: #c9302c;
+}
+
+
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const todoForm = document.getElementById('todo-form');
+    const todoInput = document.getElementById('todo-input');
+    const todoTime = document.getElementById('todo-time');
+    const todoAmPm = document.getElementById('todo-ampm');
+    const todoList = document.getElementById('todo-list');
+    const sidebarTodoList = document.getElementById('sidebar-todo-list');
+    const deletedSidebarList = document.getElementById('deleted-sidebar-list');
+    const permanentlyDeletedList = document.getElementById('permanently-deleted-list');
+
+    let todos = JSON.parse(localStorage.getItem('todos')) || [];
+    let deletedTodos = JSON.parse(localStorage.getItem('deletedTodos')) || [];
+    let permanentlyDeletedTodos = JSON.parse(localStorage.getItem('permanentlyDeletedTodos')) || [];
+
+    const renderTodos = () => {
+        todoList.innerHTML = '';
+        sidebarTodoList.innerHTML = '';
+        todos.forEach((todo, index) => {
+            const todoItem = document.createElement('li');
+            todoItem.classList.toggle('completed', todo.completed);
+
+            const todoText = document.createElement('span');
+            todoText.textContent = `${todo.text} - ${todo.time} ${todo.ampm}`;
+            todoItem.appendChild(todoText);
+
+            const editButton = document.createElement('button');
+            editButton.innerHTML = '<i class="fas fa-edit"></i>';
+            editButton.addEventListener('click', () => editTodo(index));
+            todoItem.appendChild(editButton);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteButton.classList.add('delete');
+            deleteButton.addEventListener('click', () => deleteTodo(index));
+            todoItem.appendChild(deleteButton);
+
+            const permanentlyDeleteButton = document.createElement('button');
+            permanentlyDeleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            permanentlyDeleteButton.classList.add('permanently-delete');
+            permanentlyDeleteButton.addEventListener('click', () => permanentlyDelete(index));
+            todoItem.appendChild(permanentlyDeleteButton);
+
+            todoList.appendChild(todoItem);
+
+            // Add to sidebar
+            const sidebarTodoItem = document.createElement('div');
+            sidebarTodoItem.classList.add('sub-menu-item');
+            sidebarTodoItem.textContent = `${todo.text} - ${todo.time} ${todo.ampm}`;
+            sidebarTodoList.appendChild(sidebarTodoItem);
+        });
+    };
+
+    const renderDeletedTodos = () => {
+        deletedSidebarList.innerHTML = '';
+        deletedTodos.forEach((todo, index) => {
+            const deletedTodoItem = document.createElement('div');
+            deletedTodoItem.classList.add('sub-menu-item');
+            deletedTodoItem.textContent = `${todo.text} - ${todo.time} ${todo.ampm}`;
+            deletedTodoItem.addEventListener('click', () => restoreDeletedTodo(index));
+
+            deletedSidebarList.appendChild(deletedTodoItem);
+        });
+    };
+
+    const renderPermanentlyDeletedTodos = () => {
+        permanentlyDeletedList.innerHTML = '';
+        permanentlyDeletedTodos.forEach((todo) => {
+            const permanentlyDeletedTodoItem = document.createElement('div');
+            permanentlyDeletedTodoItem.classList.add('sub-menu-item');
+            permanentlyDeletedTodoItem.textContent = `${todo.text} - ${todo.time} ${todo.ampm}`;
+
+            permanentlyDeletedList.appendChild(permanentlyDeletedTodoItem);
+        });
+    };
+
+    const addTodo = (text, time, ampm) => {
+        todos.push({ text, time, ampm, completed: false });
+        saveAndRenderTodos();
+    };
+
+    const editTodo = (index) => {
+        const newText = prompt('Edit your task', todos[index].text);
+        const newTime = prompt('Edit the time', todos[index].time);
+        const newAmPm = prompt('Edit AM/PM', todos[index].ampm);
+        if (newText && newTime && newAmPm) {
+            todos[index].text = newText;
+            todos[index].time = newTime;
+            todos[index].ampm = newAmPm;
+            saveAndRenderTodos();
+        }
+    };
+
+    const deleteTodo = (index) => {
+        const deletedTodo = todos.splice(index, 1)[0];
+        deletedTodos.push(deletedTodo);
+        saveAndRenderTodos();
+        saveAndRenderDeletedTodos();
+    };
+
+    const permanentlyDelete = (index) => {
+        const permanentlyDeletedTodo = todos.splice(index, 1)[0];
+        permanentlyDeletedTodos.push(permanentlyDeletedTodo);
+        saveAndRenderTodos();
+        renderPermanentlyDeletedTodos();
+        savePermanentlyDeletedTodos();
+    };
+
+    const restoreDeletedTodo = (index) => {
+        const restoredTodo = deletedTodos.splice(index, 1)[0];
+        todos.push(restoredTodo);
+        saveAndRenderTodos();
+        saveAndRenderDeletedTodos();
+    };
+
+    const saveAndRenderTodos = () => {
+        localStorage.setItem('todos', JSON.stringify(todos));
+        renderTodos();
+    };
+
+    const saveAndRenderDeletedTodos = () => {
+        localStorage.setItem('deletedTodos', JSON.stringify(deletedTodos));
+        renderDeletedTodos();
+    };
+
+    const savePermanentlyDeletedTodos = () => {
+        localStorage.setItem('permanentlyDeletedTodos', JSON.stringify(permanentlyDeletedTodos));
+    };
+
+    todoForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const text = todoInput.value.trim();
+        const time = todoTime.value;
+        const ampm = todoAmPm.value;
+        if (text && time && ampm) {
+            addTodo(text, time, ampm);
+            todoInput.value = '';
+            todoTime.value = '';
+            todoAmPm.value = 'AM';
+        }
+    });
+
+    renderTodos();
+    renderDeletedTodos();
+    renderPermanentlyDeletedTodos();
+});
+
+
+</script>
